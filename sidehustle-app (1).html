@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SideHustle — App & Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   RESET & TOKENS
+══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #080a0f;
+  --bg2:       #0c0f18;
+  --surface:   #111620;
+  --surface2:  #161c2a;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --accent:    #3b82f6;
+  --accent2:   #06d6a0;
+  --accent3:   #f59e0b;
+  --glow:      rgba(59,130,246,0.3);
+  --glow2:     rgba(6,214,160,0.2);
+  --text:      #e8eaf0;
+  --muted:     #6b7280;
+  --muted2:    #9ca3af;
+  --font-h:    'Syne', sans-serif;
+  --font-b:    'DM Sans', sans-serif;
+  --r:         12px;
+  --r2:        20px;
+  --max:       1200px;
+  --nav-h:     68px;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-b);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: var(--font-b); }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 99px; }
+
+/* ══════════════════════════════════════════════════════════════
+   LAYOUT SHELL
+══════════════════════════════════════════════════════════════ */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  padding-top: var(--nav-h);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOP NAV
+══════════════════════════════════════════════════════════════ */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--nav-h);
+  display: flex; align-items: center;
+  background: rgba(8,10,15,0.85);
+  backdrop-filter: blur(24px) saturate(160%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  gap: 16px;
+}
+.topnav-logo {
+  font-family: var(--font-h); font-weight: 800; font-size: 20px;
+  background: linear-gradient(135deg, #fff 30%, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.topnav-tag {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent);
+  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25);
+  padding: 3px 10px; border-radius: 99px;
+}
+.topnav-spacer { flex: 1; }
+.topnav-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 8px 14px;
+  width: 220px;
+}
+.topnav-search input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-family: var(--font-b); font-size: 13px;
+  width: 100%;
+}
+.topnav-search input::placeholder { color: var(--muted); }
+.topnav-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-h); font-weight: 700; font-size: 13px; color: #fff;
+  flex-shrink: 0;
+}
+.topnav-notif {
+  position: relative; width: 36px; height: 36px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; transition: background 0.2s;
+}
+.topnav-notif:hover { background: var(--surface2); }
+.notif-dot {
+  position: absolute; top: 6px; right: 7px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════════ */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 24px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: var(--nav-h);
+  height: calc(100vh - var(--nav-h));
+  overflow-y: auto;
+}
+.sidebar-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 8px 12px 6px; margin-top: 8px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  font-size: 14px; font-weight: 500; color: var(--muted2);
+  cursor: pointer; transition: all 0.18s;
+  border: 1px solid transparent; position: relative;
+}
+.sidebar-item:hover { background: var(--surface); color: var(--text); }
+.sidebar-item.active {
+  background: rgba(59,130,246,0.1);
+  color: var(--accent);
+  border-color: rgba(59,130,246,0.2);
+}
+.sidebar-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.sidebar-badge {
+  margin-left: auto; background: var(--accent);
+  color: #fff; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 99px;
+}
+.sidebar-badge.green { background: var(--accent2); color: #000; }
+.sidebar-bottom {
+  margin-top: auto; padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════════════════════════════════ */
+.main {
+  flex: 1; min-width: 0;
+  padding: 32px 28px;
+  overflow-y: auto;
+}
+.page { display: none; }
+.page.active { display: block; }
+
+/* Page header */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+}
+.page-header h1 {
+  font-family: var(--font-h); font-size: 26px; font-weight: 800;
+  letter-spacing: -0.02em; line-height: 1.2;
+}
+.page-header p { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.page-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-h); font-weight: 600; font-size: 13px;
+  padding: 9px 18px; border-radius: 9px; border: none; outline: none;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 0 20px var(--glow); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 32px var(--glow); }
+.btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border2); }
+.btn-ghost:hover { background: var(--surface2); }
+.btn-success { background: rgba(6,214,160,0.15); color: var(--accent2); border: 1px solid rgba(6,214,160,0.3); }
+.btn-sm { font-size: 12px; padding: 6px 12px; border-radius: 7px; }
+
+/* Cards */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 24px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border2); }
+
+/* Grid helpers */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* ══════════════════════════════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════════════════════════════ */
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 22px;
+  position: relative; overflow: hidden;
+  transition: all 0.25s;
+}
+.stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.stat-card::after {
+  content: ''; position: absolute;
+  bottom: -30px; right: -30px;
+  width: 100px; height: 100px; border-radius: 50%;
+  background: var(--stat-glow, var(--glow)); opacity: 0.2;
+}
+.stat-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.stat-value { font-family: var(--font-h); font-size: 32px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.stat-change {
+  font-size: 12px; font-weight: 600; margin-top: 8px;
+  display: flex; align-items: center; gap: 4px;
+}
+.stat-change.up { color: var(--accent2); }
+.stat-change.down { color: #f87171; }
+
+/* ══════════════════════════════════════════════════════════════
+   MINI SPARKLINE CHART
+══════════════════════════════════════════════════════════════ */
+.sparkline {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 32px; margin-top: 12px;
+}
+.spark-bar {
+  flex: 1; border-radius: 3px 3px 0 0;
+  background: var(--spark-color, var(--accent));
+  opacity: 0.6; transition: opacity 0.2s;
+}
+.spark-bar:hover { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════════════
+   PROJECT TABLE
+══════════════════════════════════════════════════════════════ */
+.table-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r2); overflow: hidden;
+}
+.table-head {
+  display: flex; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  gap: 14px;
+}
+.table-head h3 { font-family: var(--font-h); font-weight: 700; font-size: 15px; }
+.table-head-actions { margin-left: auto; display: flex; gap: 8px; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 12px 20px;
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.01);
+}
+.data-table td {
+  padding: 14px 20px; font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 99px; white-space: nowrap;
+}
+.status-pill.active   { background: rgba(59,130,246,0.12); color: #60a5fa; }
+.status-pill.done     { background: rgba(6,214,160,0.12); color: var(--accent2); }
+.status-pill.pending  { background: rgba(245,158,11,0.12); color: var(--accent3); }
+.status-pill.overdue  { background: rgba(248,113,113,0.12); color: #f87171; }
+.client-cell { display: flex; align-items: center; gap: 10px; }
+.client-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.progress-bar {
+  width: 80px; height: 6px; background: var(--bg);
+  border-radius: 99px; overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 99px; background: var(--accent); }
+
+/* ══════════════════════════════════════════════════════════════
+   PLANNER / CALENDAR
+══════════════════════════════════════════════════════════════ */
+.cal-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+}
+.cal-nav { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 18px; line-height: 1; }
+.cal-title { font-family: var(--font-h); font-weight: 800; font-size: 20px; flex: 1; }
+.cal-grid-header {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 4px; margin-bottom: 4px;
+}
+.cal-day-name {
+  text-align: center; font-size: 11px; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 6px;
+}
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-cell {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px; min-height: 80px;
+  cursor: pointer; transition: all 0.18s;
+}
+.cal-cell:hover { border-color: var(--border2); background: var(--surface2); }
+.cal-cell.today { border-color: var(--accent); background: rgba(59,130,246,0.07); }
+.cal-cell.other-month .cal-date { color: var(--muted); opacity: 0.4; }
+.cal-date {
+  font-family: var(--font-h); font-size: 13px; font-weight: 700;
+  margin-bottom: 6px;
+}
+.cal-cell.today .cal-date {
+  background: var(--accent); color: #fff;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+.cal-event {
+  font-size: 10px; font-weight: 600; padding: 2px 6px;
+  border-radius: 4px; margin-bottom: 2px; truncate: overflow;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cal-event.blue   { background: rgba(59,130,246,0.2); color: #93c5fd; }
+.cal-event.green  { background: rgba(6,214,160,0.15); color: #34d399; }
+.cal-event.amber  { background: rgba(245,158,11,0.15); color: #fcd34d; }
+.cal-event.purple { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+
+/* ══════════════════════════════════════════════════════════════
+   WORKFLOW BUILDER (Make-style)
+══════════════════════════════════════════════════════════════ */
+.workflow-canvas {
+  background: var(--bg2);
+  border: 1px solid var(--border); border-radius: var(--r2);
+  min-height: 440px; position: relative; overflow: hidden;
+  background-image:
+    radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.workflow-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  background: rgba(8,10,15,0.6); backdrop-filter: blur(8px);
+  flex-wrap: wrap;
+}
+.wf-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s; color: var(--text);
+}
+.wf-chip:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+.wf-chip-icon { font-size: 14px; }
+
+.workflow-nodes {
+  padding: 40px; display: flex; align-items: center;
+  gap: 0; overflow-x: auto; min-height: 360px;
+  position: relative;
+}
+
+/* SVG connector arrows */
+.wf-connector {
+  display: flex; align-items: center; flex-shrink: 0;
+  color: var(--muted); font-size: 18px; padding: 0 8px;
+  position: relative;
+}
+.wf-connector::before {
+  content: '';
+  width: 40px; height: 2px;
+  background: linear-gradient(90deg, var(--border2), var(--accent));
+  display: block;
+}
+.wf-connector-label {
+  position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; font-weight: 700; color: var(--muted);
+  background: var(--bg2); padding: 1px 6px; border-radius: 99px;
+  white-space: nowrap;
+}
+
+.wf-node {
+  display: flex; flex-direction: column; align-items: center;
+  width: 120px; flex-shrink: 0; position: relative;
+  cursor: pointer; transition: transform 0.2s;
+}
+.wf-node:hover { transform: translateY(-3px); }
+.wf-node-icon {
+  width: 60px; height: 60px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; border: 2px solid transparent;
+  transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  position: relative;
+}
+.wf-node-icon.active-node::after {
+  content: ''; position: absolute;
+  inset: -4px; border-radius: 20px;
+  border: 2px solid var(--accent); opacity: 0.5;
+  animation: nodeRing 2s ease-in-out infinite;
+}
+@keyframes nodeRing {
+  0%,100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.05); }
+}
+.wf-node-label {
+  font-size: 11px; font-weight: 600; color: var(--muted2);
+  margin-top: 8px; text-align: center; line-height: 1.3;
+}
+.wf-node-sublabel {
+  font-size: 10px; color: var(--muted); text-align: center; margin-top: 2px;
+}
+.wf-node-status {
+  position: absolute; top: -4px; right: -4px;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--bg2); font-size: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.wf-node-status.ok  { background: var(--accent2); }
+.wf-node-status.run { background: var(--accent); animation: pulse 1.5s infinite; }
+.wf-node-status.warn{ background: var(--accent3); }
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.6); }
+  50%      { box-shadow: 0 0 0 5px rgba(59,130,246,0); }
+}
+
+.wf-add-btn {
+  width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0;
+  background: var(--surface); border: 2px dashed var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--muted); cursor: pointer;
+  transition: all 0.2s; margin-left: 8px;
+}
+.wf-add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(59,130,246,0.05); }
+
+/* Run stats bar */
+.wf-stats {
+  display: flex; gap: 24px; padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: rgba(8,10,15,0.4);
+}
+.wf-stat-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted2); }
+.wf-stat-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.wf-stat-val  { font-weight: 700; color: var(--text); }
+
+/* ══════════════════════════════════════════════════════════════
+   INCOME CHART
+══════════════════════════════════════════════════════════════ */
+.chart-container {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 24px; overflow: hidden;
+}
+.chart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.chart-title { font-family: var(--font-h); font-weight: 700; font-size: 16px; }
+.chart-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.chart-legend { display: flex; gap: 16px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted2); }
+.legend-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.bar-chart {
+  display: flex; align-items: flex-end; gap: 8px;
+  height: 140px; padding: 0 0 24px; position: relative;
+}
+.bar-chart::after {
+  content: ''; position: absolute; bottom: 24px; left: 0; right: 0;
+  height: 1px; background: var(--border);
+}
+.bar-group { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+.bar-pair { display: flex; align-items: flex-end; gap: 3px; }
+.bar-col {
+  width: 18px; border-radius: 4px 4px 0 0;
+  transition: opacity 0.2s; cursor: pointer;
+}
+.bar-col:hover { opacity: 0.8; }
+.bar-col.income  { background: linear-gradient(to top, var(--accent), #60a5fa); }
+.bar-col.expense { background: linear-gradient(to top, rgba(248,113,113,0.5), rgba(248,113,113,0.3)); }
+.bar-label { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+/* ══════════════════════════════════════════════════════════════
+   INVOICE CARDS
+══════════════════════════════════════════════════════════════ */
+.invoice-list { display: flex; flex-direction: column; gap: 12px; }
+.invoice-item {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 20px;
+  transition: all 0.2s; cursor: pointer;
+}
+.invoice-item:hover { border-color: var(--border2); background: var(--surface2); }
+.invoice-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.invoice-num { font-family: var(--font-h); font-size: 13px; font-weight: 700; }
+.invoice-client { font-size: 12px; color: var(--muted); }
+.invoice-amount { font-family: var(--font-h); font-weight: 800; font-size: 17px; margin-left: auto; }
+.invoice-due { font-size: 11px; color: var(--muted); text-align: right; }
+
+/* ══════════════════════════════════════════════════════════════
+   APP STORE DOWNLOAD SECTION
+══════════════════════════════════════════════════════════════ */
+.download-section {
+  background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(6,214,160,0.06) 100%);
+  border: 1px solid rgba(59,130,246,0.25); border-radius: var(--r2);
+  padding: 32px; margin-bottom: 28px; position: relative; overflow: hidden;
+}
+.download-section::before {
+  content: ''; position: absolute; top: -80px; right: -80px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+}
+.download-content { position: relative; z-index: 1; }
+.download-title {
+  font-family: var(--font-h); font-size: 22px; font-weight: 800;
+  letter-spacing: -0.02em; margin-bottom: 8px;
+}
+.download-sub { font-size: 14px; color: var(--muted2); margin-bottom: 24px; max-width: 480px; }
+.store-buttons { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.store-btn {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--text); color: var(--bg);
+  border-radius: 14px; padding: 12px 20px;
+  transition: all 0.25s; border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  min-width: 160px;
+}
+.store-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.4); }
+.store-btn.dark {
+  background: #1c1c1e; color: var(--text);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.store-btn.dark:hover { background: #2c2c2e; }
+.store-btn-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+.store-btn-text { display: flex; flex-direction: column; }
+.store-btn-sub  { font-size: 10px; font-weight: 500; opacity: 0.7; line-height: 1.2; }
+.store-btn-name { font-family: var(--font-h); font-size: 16px; font-weight: 800; line-height: 1.2; }
+
+.make-btn {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, #6c47ff, #a855f7);
+  color: #fff; border-radius: 14px; padding: 12px 20px;
+  transition: all 0.25s; border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(108,71,255,0.35);
+  min-width: 160px;
+}
+.make-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(108,71,255,0.5); }
+
+/* QR badge */
+.qr-badge {
+  position: absolute; right: 32px; top: 50%; transform: translateY(-50%);
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 16px; padding: 16px; text-align: center;
+}
+.qr-grid {
+  width: 80px; height: 80px; display: grid;
+  grid-template-columns: repeat(8, 1fr); gap: 1.5px;
+  margin-bottom: 8px;
+}
+.qr-pixel {
+  border-radius: 1px;
+  background: var(--text);
+}
+.qr-pixel.off { background: transparent; }
+.qr-label { font-size: 10px; font-weight: 600; color: var(--muted); }
+
+/* ══════════════════════════════════════════════════════════════
+   TIMELINE / ACTIVITY FEED
+══════════════════════════════════════════════════════════════ */
+.activity-feed { display: flex; flex-direction: column; gap: 0; }
+.activity-item {
+  display: flex; gap: 14px; padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0; margin-top: 2px;
+}
+.activity-body { flex: 1; min-width: 0; }
+.activity-text { font-size: 13px; line-height: 1.5; }
+.activity-text strong { font-weight: 600; }
+.activity-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.activity-amount { font-family: var(--font-h); font-weight: 700; color: var(--accent2); font-size: 14px; flex-shrink: 0; margin-top: 4px; }
+
+/* ══════════════════════════════════════════════════════════════
+   TASK ITEMS
+══════════════════════════════════════════════════════════════ */
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+.task-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px;
+  cursor: pointer; transition: all 0.18s;
+}
+.task-item:hover { border-color: var(--border2); }
+.task-item.done { opacity: 0.5; }
+.task-check {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.task-item.done .task-check { background: var(--accent2); border-color: var(--accent2); color: #000; font-size: 11px; }
+.task-title { font-size: 13px; font-weight: 500; flex: 1; }
+.task-item.done .task-title { text-decoration: line-through; }
+.task-tag {
+  font-size: 10px; font-weight: 700; padding: 2px 8px;
+  border-radius: 99px; flex-shrink: 0;
+}
+.task-tag.design  { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+.task-tag.dev     { background: rgba(59,130,246,0.15); color: #93c5fd; }
+.task-tag.client  { background: rgba(6,214,160,0.15); color: #34d399; }
+.task-tag.admin   { background: rgba(245,158,11,0.15); color: #fcd34d; }
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 32px; width: 480px; max-width: 95vw;
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-title { font-family: var(--font-h); font-weight: 800; font-size: 18px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 16px; display: flex;
+  align-items: center; justify-content: center; cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-close:hover { background: var(--surface2); color: var(--text); }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 11px 14px; color: var(--text);
+  font-family: var(--font-b); font-size: 14px; outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════ */
+.toast-wrap {
+  position: fixed; bottom: 24px; right: 24px; z-index: 600;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  font-size: 13px; min-width: 260px;
+  animation: toastIn 0.3s ease;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.toast-icon { font-size: 18px; }
+.toast-text strong { display: block; font-weight: 600; }
+.toast-text span   { color: var(--muted); font-size: 12px; }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .qr-badge { display: none; }
+  .wf-node { width: 90px; }
+  .wf-node-icon { width: 48px; height: 48px; font-size: 20px; }
+}
+@media (max-width: 600px) {
+  .main { padding: 20px 16px; }
+  .grid-2, .grid-4 { grid-template-columns: 1fr; }
+  .store-buttons { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOP NAV ══════════════════════════════════════════════ -->
+<nav class="topnav">
+  <div class="topnav-logo">SideHustle</div>
+  <div class="topnav-tag">App & Planner</div>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-search">
+    <span style="color:var(--muted);font-size:14px">🔍</span>
+    <input type="text" placeholder="Search projects, clients…"/>
+  </div>
+  <div class="topnav-notif" onclick="showToast('🔔','You have 3 new notifications','Invoice #047 was viewed by client')">
+    🔔<div class="notif-dot"></div>
+  </div>
+  <div class="topnav-avatar">JM</div>
+</nav>
+
+<!-- ══ SHELL ═════════════════════════════════════════════════ -->
+<div class="app-shell">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-section-label">Main</div>
+    <div class="sidebar-item active" onclick="switchPage('dashboard',this)">
+      <span class="sidebar-icon">📊</span> Dashboard
+    </div>
+    <div class="sidebar-item" onclick="switchPage('planner',this)">
+      <span class="sidebar-icon">📅</span> Planner
+    </div>
+    <div class="sidebar-item" onclick="switchPage('projects',this)">
+      <span class="sidebar-icon">📁</span> Projects
+      <span class="sidebar-badge">4</span>
+    </div>
+    <div class="sidebar-item" onclick="switchPage('invoices',this)">
+      <span class="sidebar-icon">🧾</span> Invoices
+      <span class="sidebar-badge" style="background:rgba(245,158,11,0.15);color:var(--accent3)">2</span>
+    </div>
+    <div class="sidebar-item" onclick="switchPage('workflows',this)">
+      <span class="sidebar-icon">⚡</span> Workflows
+      <span class="sidebar-badge green">Live</span>
+    </div>
+    <div class="sidebar-section-label">Tools</div>
+    <div class="sidebar-item" onclick="switchPage('income',this)">
+      <span class="sidebar-icon">💰</span> Income
+    </div>
+    <div class="sidebar-item" onclick="switchPage('download',this)">
+      <span class="sidebar-icon">📱</span> Get the App
+    </div>
+    <div class="sidebar-bottom">
+      <div class="sidebar-item" onclick="switchPage('settings',this)">
+        <span class="sidebar-icon">⚙️</span> Settings
+      </div>
+      <div class="sidebar-item" style="display:flex;align-items:center;">
+        <span class="sidebar-icon">👤</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Jamie Mitchell</div>
+          <div style="font-size:10px;color:var(--muted)">Pro Plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ═════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- ╔═══════════════════════════════╗
+         ║  PAGE: DASHBOARD              ║
+         ╚═══════════════════════════════╝ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h1>Good morning, Jamie 👋</h1>
+          <p>Tuesday, March 10, 2026 · Here's your hustle at a glance</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost" onclick="openModal()">+ Add Project</button>
+          <button class="btn btn-primary" onclick="showToast('✅','Quick task added!','Showing in your Today list')">+ Quick Task</button>
+        </div>
+      </div>
+
+      <!-- Stat row -->
+      <div class="grid-4" style="margin-bottom:20px">
+        <div class="stat-card" style="--stat-glow:rgba(59,130,246,0.3)">
+          <div class="stat-label">This Month</div>
+          <div class="stat-value" style="color:var(--accent)">$4,820</div>
+          <div class="stat-change up">▲ 18% vs last month</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:40%;--spark-color:var(--accent)"></div>
+            <div class="spark-bar" style="height:60%;--spark-color:var(--accent)"></div>
+            <div class="spark-bar" style="height:45%;--spark-color:var(--accent)"></div>
+            <div class="spark-bar" style="height:80%;--spark-color:var(--accent)"></div>
+            <div class="spark-bar" style="height:55%;--spark-color:var(--accent)"></div>
+            <div class="spark-bar" style="height:90%;--spark-color:var(--accent)"></div>
+            <div class="spark-bar" style="height:70%;--spark-color:var(--accent)"></div>
+          </div>
+        </div>
+        <div class="stat-card" style="--stat-glow:var(--glow2)">
+          <div class="stat-label">Active Projects</div>
+          <div class="stat-value">4</div>
+          <div class="stat-change up">▲ 1 new this week</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:50%;--spark-color:var(--accent2)"></div>
+            <div class="spark-bar" style="height:50%;--spark-color:var(--accent2)"></div>
+            <div class="spark-bar" style="height:75%;--spark-color:var(--accent2)"></div>
+            <div class="spark-bar" style="height:75%;--spark-color:var(--accent2)"></div>
+            <div class="spark-bar" style="height:100%;--spark-color:var(--accent2)"></div>
+            <div class="spark-bar" style="height:100%;--spark-color:var(--accent2)"></div>
+            <div class="spark-bar" style="height:100%;--spark-color:var(--accent2)"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Unpaid Invoices</div>
+          <div class="stat-value" style="color:var(--accent3)">$1,950</div>
+          <div class="stat-change" style="color:var(--accent3)">⏳ 2 awaiting payment</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:100%;--spark-color:var(--accent3)"></div>
+            <div class="spark-bar" style="height:60%;--spark-color:var(--accent3)"></div>
+            <div class="spark-bar" style="height:80%;--spark-color:var(--accent3)"></div>
+            <div class="spark-bar" style="height:40%;--spark-color:var(--accent3)"></div>
+            <div class="spark-bar" style="height:90%;--spark-color:var(--accent3)"></div>
+            <div class="spark-bar" style="height:50%;--spark-color:var(--accent3)"></div>
+            <div class="spark-bar" style="height:70%;--spark-color:var(--accent3)"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Real Hourly Rate</div>
+          <div class="stat-value">$68</div>
+          <div class="stat-change up">▲ $12 from last month</div>
+          <div class="sparkline">
+            <div class="spark-bar" style="height:35%;--spark-color:#c4b5fd"></div>
+            <div class="spark-bar" style="height:40%;--spark-color:#c4b5fd"></div>
+            <div class="spark-bar" style="height:50%;--spark-color:#c4b5fd"></div>
+            <div class="spark-bar" style="height:65%;--spark-color:#c4b5fd"></div>
+            <div class="spark-bar" style="height:72%;--spark-color:#c4b5fd"></div>
+            <div class="spark-bar" style="height:80%;--spark-color:#c4b5fd"></div>
+            <div class="spark-bar" style="height:90%;--spark-color:#c4b5fd"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts + activity row -->
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="chart-container">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Income vs Expenses</div>
+              <div class="chart-sub">Last 6 months</div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Income</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>Expenses</div>
+            </div>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:55px"></div><div class="bar-col expense" style="height:22px"></div></div><div class="bar-label">Oct</div></div>
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:70px"></div><div class="bar-col expense" style="height:28px"></div></div><div class="bar-label">Nov</div></div>
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:48px"></div><div class="bar-col expense" style="height:18px"></div></div><div class="bar-label">Dec</div></div>
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:85px"></div><div class="bar-col expense" style="height:30px"></div></div><div class="bar-label">Jan</div></div>
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:78px"></div><div class="bar-col expense" style="height:24px"></div></div><div class="bar-label">Feb</div></div>
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:110px"></div><div class="bar-col expense" style="height:35px"></div></div><div class="bar-label">Mar</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div style="font-family:var(--font-h);font-weight:700;font-size:15px">Recent Activity</div>
+            <button class="btn btn-ghost btn-sm">View All</button>
+          </div>
+          <div class="activity-feed">
+            <div class="activity-item">
+              <div class="activity-dot" style="background:rgba(6,214,160,0.15)">💰</div>
+              <div class="activity-body">
+                <div class="activity-text"><strong>Payment received</strong> from Acme Corp</div>
+                <div class="activity-time">2 hours ago</div>
+              </div>
+              <div class="activity-amount">+$1,200</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:rgba(59,130,246,0.15)">📄</div>
+              <div class="activity-body">
+                <div class="activity-text"><strong>Invoice #049</strong> sent to Designify</div>
+                <div class="activity-time">Yesterday, 4:30 PM</div>
+              </div>
+              <div class="activity-amount" style="color:var(--accent3)">$850</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:rgba(245,158,11,0.15)">⚡</div>
+              <div class="activity-body">
+                <div class="activity-text"><strong>Workflow triggered</strong> — Invoice reminder</div>
+                <div class="activity-time">Yesterday, 9:00 AM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:rgba(139,92,246,0.15)">🆕</div>
+              <div class="activity-body">
+                <div class="activity-text"><strong>New project</strong> "Brand Refresh" created</div>
+                <div class="activity-time">2 days ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's tasks -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+          <div>
+            <div style="font-family:var(--font-h);font-weight:700;font-size:15px">Today's Tasks</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">3 of 6 completed</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="showToast('➕','Task added!','Added to Today list')">+ Add Task</button>
+        </div>
+        <div class="task-list">
+          <div class="task-item done" onclick="toggleTask(this)"><div class="task-check">✓</div><div class="task-title">Send proposal to NovaBrand</div><div class="task-tag client">Client</div></div>
+          <div class="task-item done" onclick="toggleTask(this)"><div class="task-check">✓</div><div class="task-title">Review logo variations — round 2</div><div class="task-tag design">Design</div></div>
+          <div class="task-item done" onclick="toggleTask(this)"><div class="task-check">✓</div><div class="task-title">Update project timeline for Q2</div><div class="task-tag admin">Admin</div></div>
+          <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-title">Fix mobile nav bug on client site</div><div class="task-tag dev">Dev</div></div>
+          <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-title">Write content brief for Acme blog post</div><div class="task-tag client">Client</div></div>
+          <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-title">Invoice follow-up: Designify (14 days overdue)</div><div class="task-tag admin">Admin</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════╗
+         ║  PAGE: PLANNER                ║
+         ╚═══════════════════════════════╝ -->
+    <div class="page" id="page-planner">
+      <div class="page-header">
+        <div>
+          <h1>📅 Weekly Planner</h1>
+          <p>Organize your schedule, deadlines & deliverables</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Week</button>
+          <button class="btn btn-ghost">Month</button>
+          <button class="btn btn-primary" onclick="showToast('📅','Event added!','Appears on your calendar')">+ New Event</button>
+        </div>
+      </div>
+
+      <div class="cal-header">
+        <button class="cal-nav" onclick="changeMonth(-1)">←</button>
+        <div class="cal-title" id="calTitle">March 2026</div>
+        <button class="cal-nav" onclick="changeMonth(1)">→</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="goToday()">Today</button>
+      </div>
+
+      <div class="cal-grid-header">
+        <div class="cal-day-name">Sun</div>
+        <div class="cal-day-name">Mon</div>
+        <div class="cal-day-name">Tue</div>
+        <div class="cal-day-name">Wed</div>
+        <div class="cal-day-name">Thu</div>
+        <div class="cal-day-name">Fri</div>
+        <div class="cal-day-name">Sat</div>
+      </div>
+
+      <div class="cal-grid" id="calGrid"></div>
+
+      <div style="margin-top:24px" class="grid-2">
+        <div class="card">
+          <div style="font-family:var(--font-h);font-weight:700;font-size:15px;margin-bottom:16px">Upcoming Deadlines</div>
+          <div class="task-list">
+            <div class="task-item"><div class="task-check"></div><div class="task-title">Brand Refresh — Final delivery</div><div class="task-tag design" style="background:rgba(248,113,113,0.15);color:#f87171">Mar 14</div></div>
+            <div class="task-item"><div class="task-check"></div><div class="task-title">Acme Corp — Q2 Content Pack</div><div class="task-tag client">Mar 20</div></div>
+            <div class="task-item"><div class="task-check"></div><div class="task-title">NovaBrand — Website Launch</div><div class="task-tag dev">Apr 1</div></div>
+            <div class="task-item"><div class="task-check"></div><div class="task-title">Q1 Tax Documents Due</div><div class="task-tag admin">Apr 15</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-family:var(--font-h);font-weight:700;font-size:15px;margin-bottom:16px">Booked This Week</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:48px;text-align:center;flex-shrink:0">
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">MON</div>
+                <div style="font-family:var(--font-h);font-size:20px;font-weight:800;line-height:1">09</div>
+              </div>
+              <div style="flex:1;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px">
+                <div style="font-size:13px;font-weight:600">Client call — Acme Corp</div>
+                <div style="font-size:11px;color:var(--muted)">10:00 AM · 45 min · Zoom</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:48px;text-align:center;flex-shrink:0">
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">TUE</div>
+                <div style="font-family:var(--font-h);font-size:20px;font-weight:800;line-height:1">10</div>
+              </div>
+              <div style="flex:1;background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.2);border-radius:8px;padding:10px 12px">
+                <div style="font-size:13px;font-weight:600">Design review — Brand Refresh</div>
+                <div style="font-size:11px;color:var(--muted)">2:00 PM · 1 hour · Figma</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:48px;text-align:center;flex-shrink:0">
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">THU</div>
+                <div style="font-family:var(--font-h);font-size:20px;font-weight:800;line-height:1">12</div>
+              </div>
+              <div style="flex:1;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 12px">
+                <div style="font-size:13px;font-weight:600">NovaBrand — Kickoff meeting</div>
+                <div style="font-size:11px;color:var(--muted)">11:00 AM · 90 min · In person</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════╗
+         ║  PAGE: PROJECTS               ║
+         ╚═══════════════════════════════╝ -->
+    <div class="page" id="page-projects">
+      <div class="page-header">
+        <div><h1>📁 Projects</h1><p>4 active · 12 completed</p></div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Filter</button>
+          <button class="btn btn-primary" onclick="openModal()">+ New Project</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3>All Projects</h3>
+          <div class="table-head-actions">
+            <button class="btn btn-ghost btn-sm">Sort</button>
+            <button class="btn btn-ghost btn-sm">Export</button>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Client</th>
+              <th>Value</th>
+              <th>Progress</th>
+              <th>Deadline</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr onclick="showToast('📁','Brand Refresh','Opening project details…')">
+              <td><div style="font-weight:600">Brand Refresh</div><div style="font-size:11px;color:var(--muted)">Logo · Identity · Guidelines</div></td>
+              <td><div class="client-cell"><div class="client-avatar" style="background:linear-gradient(135deg,#3b82f6,#06d6a0)">DE</div>Designify</div></td>
+              <td><strong>$2,400</strong></td>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar"><div class="progress-fill" style="width:72%"></div></div><span style="font-size:11px;color:var(--muted)">72%</span></div></td>
+              <td style="font-size:13px;color:#f87171">Mar 14</td>
+              <td><div class="status-pill active">● Active</div></td>
+            </tr>
+            <tr onclick="showToast('📁','Acme Content Pack','Opening project details…')">
+              <td><div style="font-weight:600">Q2 Content Pack</div><div style="font-size:11px;color:var(--muted)">Blog · Social · Email</div></td>
+              <td><div class="client-cell"><div class="client-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">AC</div>Acme Corp</div></td>
+              <td><strong>$1,800</strong></td>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div><span style="font-size:11px;color:var(--muted)">40%</span></div></td>
+              <td style="font-size:13px">Mar 20</td>
+              <td><div class="status-pill active">● Active</div></td>
+            </tr>
+            <tr onclick="showToast('📁','NovaBrand Website','Opening project details…')">
+              <td><div style="font-weight:600">Website Redesign</div><div style="font-size:11px;color:var(--muted)">UI Design · Dev · CMS</div></td>
+              <td><div class="client-cell"><div class="client-avatar" style="background:linear-gradient(135deg,#8b5cf6,#ec4899)">NB</div>NovaBrand</div></td>
+              <td><strong>$5,200</strong></td>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar"><div class="progress-fill" style="width:15%"></div></div><span style="font-size:11px;color:var(--muted)">15%</span></div></td>
+              <td style="font-size:13px">Apr 1</td>
+              <td><div class="status-pill pending">◐ Kickoff</div></td>
+            </tr>
+            <tr onclick="showToast('📁','Mobile App UI','Opening project details…')">
+              <td><div style="font-weight:600">Mobile App UI</div><div style="font-size:11px;color:var(--muted)">Figma · Prototype</div></td>
+              <td><div class="client-cell"><div class="client-avatar" style="background:linear-gradient(135deg,#06d6a0,#3b82f6)">SC</div>ScaleUp</div></td>
+              <td><strong>$3,100</strong></td>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar"><div class="progress-fill" style="width:90%;background:var(--accent2)"></div></div><span style="font-size:11px;color:var(--muted)">90%</span></div></td>
+              <td style="font-size:13px">Mar 8</td>
+              <td><div class="status-pill overdue">! Overdue</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════╗
+         ║  PAGE: INVOICES               ║
+         ╚═══════════════════════════════╝ -->
+    <div class="page" id="page-invoices">
+      <div class="page-header">
+        <div><h1>🧾 Invoices</h1><p>$1,950 outstanding · $4,820 collected this month</p></div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Filter</button>
+          <button class="btn btn-primary" onclick="showToast('🧾','Invoice created!','Ready to send to client')">+ New Invoice</button>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-bottom:20px">
+        <div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-value" style="color:var(--accent3)">$1,950</div><div class="stat-change" style="color:var(--accent3)">2 invoices pending</div></div>
+        <div class="stat-card"><div class="stat-label">Collected — March</div><div class="stat-value" style="color:var(--accent2)">$4,820</div><div class="stat-change up">▲ 18% vs Feb</div></div>
+        <div class="stat-card"><div class="stat-label">Avg. Payment Time</div><div class="stat-value">9 days</div><div class="stat-change up">▲ 3 days faster</div></div>
+      </div>
+      <div class="invoice-list">
+        <div class="invoice-item" onclick="showToast('🧾','Invoice #049','Sent to Designify — awaiting payment')">
+          <div class="invoice-icon" style="background:rgba(245,158,11,0.12)">⏳</div>
+          <div>
+            <div class="invoice-num">#049 — Designify</div>
+            <div class="invoice-client">Brand Refresh · Final milestone</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="invoice-amount" style="color:var(--accent3)">$1,100</div>
+            <div class="invoice-due">Due Mar 15 · Sent Mar 1</div>
+          </div>
+          <div class="status-pill pending" style="margin-left:16px">Pending</div>
+        </div>
+        <div class="invoice-item" onclick="showToast('🧾','Invoice #048','Acme Corp — 14 days overdue!')">
+          <div class="invoice-icon" style="background:rgba(248,113,113,0.12)">⚠️</div>
+          <div>
+            <div class="invoice-num">#048 — Acme Corp</div>
+            <div class="invoice-client">Q1 Content Pack · Full payment</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="invoice-amount" style="color:#f87171">$850</div>
+            <div class="invoice-due" style="color:#f87171">Due Feb 25 · 14 days late!</div>
+          </div>
+          <div class="status-pill overdue" style="margin-left:16px">Overdue</div>
+        </div>
+        <div class="invoice-item">
+          <div class="invoice-icon" style="background:rgba(6,214,160,0.12)">✅</div>
+          <div>
+            <div class="invoice-num">#047 — ScaleUp</div>
+            <div class="invoice-client">Mobile App UI · Deposit 50%</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="invoice-amount">$1,550</div>
+            <div class="invoice-due">Paid Mar 5</div>
+          </div>
+          <div class="status-pill done" style="margin-left:16px">Paid</div>
+        </div>
+        <div class="invoice-item">
+          <div class="invoice-icon" style="background:rgba(6,214,160,0.12)">✅</div>
+          <div>
+            <div class="invoice-num">#046 — NovaBrand</div>
+            <div class="invoice-client">Website Redesign · Deposit</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="invoice-amount">$2,600</div>
+            <div class="invoice-due">Paid Mar 2</div>
+          </div>
+          <div class="status-pill done" style="margin-left:16px">Paid</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════╗
+         ║  PAGE: WORKFLOWS (Make-style) ║
+         ╚═══════════════════════════════╝ -->
+    <div class="page" id="page-workflows">
+      <div class="page-header">
+        <div>
+          <h1>⚡ AI Workflows</h1>
+          <p>Automate your hustle with Make-powered automation</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost" onclick="showToast('📖','Workflow docs','Opening Make.com integration guide')">Docs</button>
+          <button class="btn btn-primary" onclick="showToast('⚡','New workflow created!','Drag nodes to connect your automation')">+ New Workflow</button>
+        </div>
+      </div>
+
+      <!-- Workflow 1: Invoice Reminder -->
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="font-family:var(--font-h);font-weight:700;font-size:16px">Invoice Auto-Reminder</div>
+          <div class="status-pill done">● Live</div>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="runWorkflow()">▶ Run Now</button>
+            <button class="btn btn-ghost btn-sm">Edit</button>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden">
+          <div class="workflow-toolbar">
+            <div class="wf-chip"><span class="wf-chip-icon">📅</span> Schedule: Daily 9AM</div>
+            <div class="wf-chip"><span class="wf-chip-icon">🔍</span> Filter: Overdue > 7d</div>
+            <div class="wf-chip"><span class="wf-chip-icon">📧</span> Email template</div>
+            <div class="wf-chip"><span class="wf-chip-icon">💬</span> Slack alert</div>
+            <div style="margin-left:auto;font-size:12px;color:var(--muted)">Last run: Today 9:00 AM · 2 emails sent</div>
+          </div>
+          <div class="workflow-nodes">
+            <!-- Node 1 -->
+            <div class="wf-node">
+              <div class="wf-node-icon active-node" style="background:linear-gradient(135deg,#1e3a5f,#1e40af)">
+                <div class="wf-node-status ok"></div>
+                📅
+              </div>
+              <div class="wf-node-label">Schedule</div>
+              <div class="wf-node-sublabel">Daily 9:00 AM</div>
+            </div>
+            <div class="wf-connector"><div class="wf-connector-label">triggers</div></div>
+            <!-- Node 2 -->
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#1a1a2e,#6c47ff)">
+                <div class="wf-node-status ok"></div>
+                🔍
+              </div>
+              <div class="wf-node-label">Filter Invoices</div>
+              <div class="wf-node-sublabel">Due > 7 days</div>
+            </div>
+            <div class="wf-connector"></div>
+            <!-- Node 3 -->
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#0f2027,#203a43)">
+                <div class="wf-node-status ok"></div>
+                📧
+              </div>
+              <div class="wf-node-label">Send Email</div>
+              <div class="wf-node-sublabel">Reminder template</div>
+            </div>
+            <div class="wf-connector"></div>
+            <!-- Node 4 -->
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#1a1a1a,#4a154b)">
+                <div class="wf-node-status ok"></div>
+                💬
+              </div>
+              <div class="wf-node-label">Slack Alert</div>
+              <div class="wf-node-sublabel">#invoices</div>
+            </div>
+            <div class="wf-connector"></div>
+            <!-- Node 5 -->
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#052e16,#14532d)">
+                <div class="wf-node-status ok"></div>
+                📝
+              </div>
+              <div class="wf-node-label">Log Activity</div>
+              <div class="wf-node-sublabel">SideHustle</div>
+            </div>
+            <div class="wf-add-btn" onclick="showToast('➕','Add node','Click to add next action')">+</div>
+          </div>
+          <div class="wf-stats">
+            <div class="wf-stat-item"><div class="wf-stat-dot" style="background:var(--accent2)"></div>Status: <span class="wf-stat-val">Active</span></div>
+            <div class="wf-stat-item"><div class="wf-stat-dot" style="background:var(--accent)"></div>Runs this month: <span class="wf-stat-val">30</span></div>
+            <div class="wf-stat-item"><div class="wf-stat-dot" style="background:var(--accent3)"></div>Emails sent: <span class="wf-stat-val">12</span></div>
+            <div class="wf-stat-item"><div class="wf-stat-dot" style="background:#c4b5fd"></div>Success rate: <span class="wf-stat-val">100%</span></div>
+            <div style="margin-left:auto">
+              <a href="https://www.make.com" target="_blank" class="btn btn-ghost btn-sm" style="font-size:11px">Powered by Make.com ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow 2: New Client Onboarding -->
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="font-family:var(--font-h);font-weight:700;font-size:16px">New Client Onboarding</div>
+          <div class="status-pill pending">◐ Paused</div>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-success btn-sm" onclick="showToast('▶','Workflow activated!','New Client Onboarding is now live')">▶ Activate</button>
+            <button class="btn btn-ghost btn-sm">Edit</button>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden">
+          <div class="workflow-toolbar">
+            <div class="wf-chip"><span class="wf-chip-icon">🆕</span> Trigger: New project</div>
+            <div class="wf-chip"><span class="wf-chip-icon">📋</span> Create task list</div>
+            <div class="wf-chip"><span class="wf-chip-icon">📧</span> Welcome email</div>
+            <div class="wf-chip"><span class="wf-chip-icon">🗂️</span> Create Drive folder</div>
+            <div class="wf-chip"><span class="wf-chip-icon">🧾</span> Draft invoice</div>
+          </div>
+          <div class="workflow-nodes">
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#14532d,#052e16);opacity:0.6">
+                <div class="wf-node-status warn"></div>
+                🆕
+              </div>
+              <div class="wf-node-label">New Project</div>
+              <div class="wf-node-sublabel">Trigger</div>
+            </div>
+            <div class="wf-connector"></div>
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#1e293b,#334155);opacity:0.6">📋</div>
+              <div class="wf-node-label">Task List</div>
+              <div class="wf-node-sublabel">From template</div>
+            </div>
+            <div class="wf-connector"></div>
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#0f2027,#203a43);opacity:0.6">📧</div>
+              <div class="wf-node-label">Welcome Email</div>
+              <div class="wf-node-sublabel">To client</div>
+            </div>
+            <div class="wf-connector"></div>
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#14375e,#1a56db);opacity:0.6">🗂️</div>
+              <div class="wf-node-label">Drive Folder</div>
+              <div class="wf-node-sublabel">Google Drive</div>
+            </div>
+            <div class="wf-connector"></div>
+            <div class="wf-node">
+              <div class="wf-node-icon" style="background:linear-gradient(135deg,#3f1f00,#78350f);opacity:0.6">🧾</div>
+              <div class="wf-node-label">Draft Invoice</div>
+              <div class="wf-node-sublabel">Auto-populate</div>
+            </div>
+            <div class="wf-add-btn" onclick="showToast('➕','Add node','Add your next automation step')">+</div>
+          </div>
+          <div class="wf-stats">
+            <div class="wf-stat-item"><div class="wf-stat-dot" style="background:var(--accent3)"></div>Status: <span class="wf-stat-val">Paused</span></div>
+            <div class="wf-stat-item"><div class="wf-stat-dot" style="background:var(--muted)"></div>Last run: <span class="wf-stat-val">Never</span></div>
+            <div style="margin-left:auto">
+              <a href="https://www.make.com" target="_blank" class="btn btn-ghost btn-sm" style="font-size:11px">Powered by Make.com ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════╗
+         ║  PAGE: INCOME                 ║
+         ╚═══════════════════════════════╝ -->
+    <div class="page" id="page-income">
+      <div class="page-header">
+        <div><h1>💰 Income Tracker</h1><p>Your real earnings, broken down your way</p></div>
+        <div class="page-actions">
+          <button class="btn btn-ghost">Export CSV</button>
+          <button class="btn btn-primary" onclick="showToast('💰','Payment logged!','Added to your March income')">+ Log Payment</button>
+        </div>
+      </div>
+      <div class="grid-4" style="margin-bottom:20px">
+        <div class="stat-card"><div class="stat-label">YTD Income</div><div class="stat-value" style="color:var(--accent2)">$13,440</div><div class="stat-change up">▲ 24% vs last year</div></div>
+        <div class="stat-card"><div class="stat-label">Best Month</div><div class="stat-value">$5,200</div><div class="stat-change" style="color:var(--muted2)">January 2026</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Monthly</div><div class="stat-value">$4,480</div><div class="stat-change up">▲ On track for $53k</div></div>
+        <div class="stat-card"><div class="stat-label">Tax Set Aside</div><div class="stat-value" style="color:#f87171">$3,360</div><div class="stat-change" style="color:var(--muted2)">25% auto-saved</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="chart-container">
+          <div class="chart-header">
+            <div><div class="chart-title">Monthly Income — 2026</div><div class="chart-sub">Gross earnings by month</div></div>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:120px;width:28px"></div></div><div class="bar-label">Jan</div></div>
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:90px;width:28px"></div></div><div class="bar-label">Feb</div></div>
+            <div class="bar-group"><div class="bar-pair"><div class="bar-col income" style="height:105px;width:28px"></div></div><div class="bar-label">Mar</div></div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">
+            <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Design</div>
+              <div style="font-family:var(--font-h);font-weight:800">$6,800</div>
+              <div style="font-size:11px;color:var(--accent2)">51%</div>
+            </div>
+            <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Development</div>
+              <div style="font-family:var(--font-h);font-weight:800">$3,900</div>
+              <div style="font-size:11px;color:var(--accent)">29%</div>
+            </div>
+            <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Writing</div>
+              <div style="font-family:var(--font-h);font-weight:800">$2,740</div>
+              <div style="font-size:11px;color:#c4b5fd">20%</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-family:var(--font-h);font-weight:700;font-size:15px;margin-bottom:16px">Income by Client</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:600">Acme Corp</span>
+                <span style="font-family:var(--font-h);font-weight:700">$4,200</span>
+              </div>
+              <div style="height:6px;background:var(--bg);border-radius:99px;overflow:hidden"><div style="height:100%;width:68%;background:var(--accent);border-radius:99px"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:600">ScaleUp</span>
+                <span style="font-family:var(--font-h);font-weight:700">$3,100</span>
+              </div>
+              <div style="height:6px;background:var(--bg);border-radius:99px;overflow:hidden"><div style="height:100%;width:50%;background:var(--accent2);border-radius:99px"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:600">NovaBrand</span>
+                <span style="font-family:var(--font-h);font-weight:700">$2,600</span>
+              </div>
+              <div style="height:6px;background:var(--bg);border-radius:99px;overflow:hidden"><div style="height:100%;width:42%;background:#c4b5fd;border-radius:99px"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:600">Designify</span>
+                <span style="font-family:var(--font-h);font-weight:700">$2,400</span>
+              </div>
+              <div style="height:6px;background:var(--bg);border-radius:99px;overflow:hidden"><div style="height:100%;width:39%;background:var(--accent3);border-radius:99px"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;font-weight:600">Others</span>
+                <span style="font-family:var(--font-h);font-weight:700">$1,140</span>
+              </div>
+              <div style="height:6px;background:var(--bg);border-radius:99px;overflow:hidden"><div style="height:100%;width:18%;background:var(--muted);border-radius:99px"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════╗
+         ║  PAGE: DOWNLOAD / APP STORES  ║
+         ╚═══════════════════════════════╝ -->
+    <div class="page" id="page-download">
+      <div class="page-header">
+        <div><h1>📱 Get the SideHustle App</h1><p>Your hustle in your pocket — iOS, Android & desktop</p></div>
+      </div>
+
+      <!-- Main download card -->
+      <div class="download-section" style="margin-bottom:20px">
+        <div class="download-content">
+          <div class="download-title">Download SideHustle Free</div>
+          <div class="download-sub">Manage projects, track income, and automate your workflow from anywhere. Available on all platforms — your data syncs instantly.</div>
+          <div class="store-buttons">
+            <!-- App Store -->
+            <button class="store-btn" onclick="showToast('🍎','App Store','Opening iOS download page…')">
+              <div class="store-btn-icon"></div>
+              <div class="store-btn-text">
+                <span class="store-btn-sub">Download on the</span>
+                <span class="store-btn-name">App Store</span>
+              </div>
+            </button>
+            <!-- Google Play -->
+            <button class="store-btn dark" onclick="showToast('🤖','Google Play','Opening Android download page…')">
+              <div class="store-btn-icon">▶</div>
+              <div class="store-btn-text">
+                <span class="store-btn-sub">Get it on</span>
+                <span class="store-btn-name">Google Play</span>
+              </div>
+            </button>
+            <!-- Make.com integration -->
+            <button class="make-btn" onclick="showToast('⚡','Make.com','Opening Make.com automation setup…')">
+              <div style="font-size:24px">⚡</div>
+              <div class="store-btn-text">
+                <span class="store-btn-sub" style="opacity:0.8">Automate with</span>
+                <span class="store-btn-name">Make.com</span>
+              </div>
+            </button>
+          </div>
+        </div>
+        <!-- QR Code (decorative grid) -->
+        <div class="qr-badge">
+          <div class="qr-grid" id="qrGrid"></div>
+          <div class="qr-label">Scan to download</div>
+        </div>
+      </div>
+
+      <!-- Platform cards -->
+      <div class="grid-3" style="margin-bottom:20px">
+        <div class="card" style="text-align:center">
+          <div style="font-size:48px;margin-bottom:16px"></div>
+          <div style="font-family:var(--font-h);font-weight:700;font-size:16px;margin-bottom:8px">iOS App</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:20px">iPhone & iPad · iOS 16+ · Native widgets, Siri shortcuts, and offline mode.</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:16px">
+            <span style="color:#f59e0b">★★★★★</span>
+            <span style="font-size:12px;color:var(--muted)">4.9 · 2.4k ratings</span>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="showToast('🍎','Redirecting…','Opening App Store listing')">Download Free</button>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:48px;margin-bottom:16px">🤖</div>
+          <div style="font-family:var(--font-h);font-weight:700;font-size:16px;margin-bottom:8px">Android App</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Android 10+ · Material You design, home screen widgets & Google integration.</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:16px">
+            <span style="color:#f59e0b">★★★★★</span>
+            <span style="font-size:12px;color:var(--muted)">4.8 · 1.8k ratings</span>
+          </div>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="showToast('🤖','Redirecting…','Opening Google Play listing')">Download Free</button>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:48px;margin-bottom:16px">⚡</div>
+          <div style="font-family:var(--font-h);font-weight:700;font-size:16px;margin-bottom:8px">Make.com Integration</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Connect SideHustle to 1,500+ apps. Automate invoices, tasks, and notifications.</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:16px">
+            <span style="font-size:12px;color:var(--muted2)">AI Workflow Automation Software</span>
+          </div>
+          <button class="make-btn" style="width:100%;justify-content:center" onclick="showToast('⚡','Make.com','Setting up your automation templates…')">Connect Make.com</button>
+        </div>
+      </div>
+
+      <!-- Features of the mobile app -->
+      <div class="card">
+        <div style="font-family:var(--font-h);font-weight:700;font-size:16px;margin-bottom:20px">What's in the mobile app</div>
+        <div class="grid-4">
+          <div style="text-align:center;padding:16px">
+            <div style="font-size:32px;margin-bottom:10px">📊</div>
+            <div style="font-size:13px;font-weight:600">Live Dashboard</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Check earnings & project status on the go</div>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-size:32px;margin-bottom:10px">🧾</div>
+            <div style="font-size:13px;font-weight:600">Send Invoices</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Create & send professional invoices instantly</div>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-size:32px;margin-bottom:10px">⏱️</div>
+            <div style="font-size:13px;font-weight:600">Time Tracker</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">One-tap timer for any project</div>
+          </div>
+          <div style="text-align:center;padding:16px">
+            <div style="font-size:32px;margin-bottom:10px">🔔</div>
+            <div style="font-size:13px;font-weight:600">Smart Alerts</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Payment received, deadline alerts & more</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════╗
+         ║  PAGE: SETTINGS               ║
+         ╚═══════════════════════════════╝ -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><h1>⚙️ Settings</h1><p>Manage your account, integrations & preferences</p></div>
+        <button class="btn btn-primary" onclick="showToast('✅','Settings saved!','Your preferences have been updated')">Save Changes</button>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div style="font-family:var(--font-h);font-weight:700;margin-bottom:20px">Profile</div>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" value="Jamie Mitchell" type="text"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" value="jamie@example.com" type="email"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hourly Rate ($)</label>
+            <input class="form-input" value="75" type="number"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tax Set-Aside (%)</label>
+            <input class="form-input" value="25" type="number"/>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-family:var(--font-h);font-weight:700;margin-bottom:20px">Integrations</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px">
+              <div style="display:flex;align-items:center;gap:12px"><span style="font-size:20px">⚡</span><div><div style="font-size:13px;font-weight:600">Make.com</div><div style="font-size:11px;color:var(--accent2)">● Connected</div></div></div>
+              <button class="btn btn-ghost btn-sm">Manage</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px">
+              <div style="display:flex;align-items:center;gap:12px"><span style="font-size:20px">🗂️</span><div><div style="font-size:13px;font-weight:600">Google Drive</div><div style="font-size:11px;color:var(--accent2)">● Connected</div></div></div>
+              <button class="btn btn-ghost btn-sm">Manage</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px">
+              <div style="display:flex;align-items:center;gap:12px"><span style="font-size:20px">💬</span><div><div style="font-size:13px;font-weight:600">Slack</div><div style="font-size:11px;color:var(--accent2)">● Connected</div></div></div>
+              <button class="btn btn-ghost btn-sm">Manage</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px">
+              <div style="display:flex;align-items:center;gap:12px"><span style="font-size:20px">🍎</span><div><div style="font-size:13px;font-weight:600">iOS App</div><div style="font-size:11px;color:var(--muted)">Not installed</div></div></div>
+              <button class="btn btn-primary btn-sm" onclick="showToast('🍎','App Store','Opening download page…')">Download</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ NEW PROJECT MODAL ════════════════════════════════════ -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Project</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Project Name</label>
+      <input class="form-input" placeholder="e.g. Brand Refresh for Acme" type="text"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Client</label>
+        <input class="form-input" placeholder="Client name" type="text"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Value ($)</label>
+        <input class="form-input" placeholder="0.00" type="number"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Start Date</label>
+        <input class="form-input" type="date" value="2026-03-10"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deadline</label>
+        <input class="form-input" type="date"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" placeholder="What's in scope?" type="text"/>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitProject()">Create Project →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ════════════════════════════════════════════════ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ══ PAGE NAVIGATION ══════════════════════════════════════ */
+function switchPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+/* ══ MODAL ════════════════════════════════════════════════ */
+function openModal()  { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+function submitProject() {
+  closeModal();
+  showToast('📁', 'Project created!', 'Added to your active projects');
+}
+
+/* ══ TOAST ════════════════════════════════════════════════ */
+function showToast(icon, title, sub) {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-text"><strong>${title}</strong><span>${sub||''}</span></div>`;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+/* ══ TASK TOGGLE ══════════════════════════════════════════ */
+function toggleTask(el) {
+  el.classList.toggle('done');
+  const check = el.querySelector('.task-check');
+  check.textContent = el.classList.contains('done') ? '✓' : '';
+}
+
+/* ══ WORKFLOW RUN ANIMATION ══════════════════════════════ */
+function runWorkflow() {
+  showToast('⚡', 'Workflow running…', 'Processing 2 overdue invoices');
+  setTimeout(() => showToast('✅', 'Workflow complete!', '2 reminder emails sent successfully'), 2000);
+}
+
+/* ══ CALENDAR ════════════════════════════════════════════ */
+let calDate = new Date(2026, 2, 1); // March 2026
+const calEvents = {
+  '2026-3-4':  [{text:'Proposal due', cls:'amber'}],
+  '2026-3-9':  [{text:'Acme call', cls:'blue'}],
+  '2026-3-10': [{text:'Design review', cls:'green'},{text:'TODAY', cls:'blue'}],
+  '2026-3-12': [{text:'NovaBrand KO', cls:'amber'}],
+  '2026-3-14': [{text:'Brand Refresh DL', cls:'purple'}],
+  '2026-3-20': [{text:'Content pack due', cls:'amber'}],
+  '2026-3-24': [{text:'Invoice #050', cls:'green'}],
+  '2026-3-27': [{text:'Client review', cls:'blue'}],
+};
+
+function renderCal() {
+  const grid = document.getElementById('calGrid');
+  const title = document.getElementById('calTitle');
+  grid.innerHTML = '';
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  title.textContent = months[calDate.getMonth()] + ' ' + calDate.getFullYear();
+  const year = calDate.getFullYear(), month = calDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+  const today = new Date();
+  const cells = firstDay + daysInMonth;
+  const total = Math.ceil(cells / 7) * 7;
+  for (let i = 0; i < total; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    let dayNum, isOther = false;
+    if (i < firstDay) { dayNum = daysInPrev - firstDay + i + 1; isOther = true; }
+    else if (i >= cells) { dayNum = i - cells + 1; isOther = true; }
+    else { dayNum = i - firstDay + 1; }
+    if (isOther) cell.classList.add('other-month');
+    const isToday = !isOther && dayNum === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    if (isToday) cell.classList.add('today');
+    const dateNum = document.createElement('div');
+    dateNum.className = 'cal-date';
+    dateNum.textContent = dayNum;
+    cell.appendChild(dateNum);
+    if (!isOther) {
+      const key = `${year}-${month+1}-${dayNum}`;
+      if (calEvents[key]) {
+        calEvents[key].forEach(ev => {
+          const e = document.createElement('div');
+          e.className = `cal-event ${ev.cls}`;
+          e.textContent = ev.text;
+          cell.appendChild(e);
+        });
+      }
+    }
+    cell.onclick = () => {
+      if (!isOther) showToast('📅', `March ${dayNum}`, 'Click to add an event');
+    };
+    grid.appendChild(cell);
+  }
+}
+function changeMonth(d) { calDate.setMonth(calDate.getMonth() + d); renderCal(); }
+function goToday() { calDate = new Date(2026, 2, 1); renderCal(); }
+renderCal();
+
+/* ══ QR CODE (decorative) ════════════════════════════════ */
+function buildQR() {
+  const grid = document.getElementById('qrGrid');
+  if (!grid) return;
+  // Simple deterministic pattern for visual QR
+  const pattern = [
+    1,1,1,1,1,1,1,0,
+    1,0,0,0,0,0,1,0,
+    1,0,1,1,1,0,1,0,
+    1,0,1,0,1,0,1,1,
+    1,0,1,1,1,0,1,0,
+    1,0,0,0,0,0,1,1,
+    1,1,1,1,1,1,1,0,
+    0,1,0,1,0,1,0,1,
+    1,0,1,1,0,0,1,1,
+    0,1,0,0,1,0,0,0,
+    1,1,0,1,1,0,1,1,
+    0,0,1,0,0,1,0,1,
+    1,1,1,0,1,1,1,0,
+    1,0,0,1,0,0,1,0,
+    1,0,1,0,1,0,0,1,
+    0,1,1,1,0,1,1,0,
+    1,1,1,1,1,1,1,1,
+    0,0,1,0,0,1,0,1,
+    1,0,0,1,1,0,1,1,
+    0,1,0,0,0,1,0,0,
+    1,0,1,1,0,1,1,1,
+    0,1,0,1,1,0,0,0,
+    1,1,1,0,1,1,1,0,
+    0,0,1,0,0,0,0,1,
+    1,1,0,1,0,1,1,0,
+    0,1,1,0,1,0,0,1,
+    1,0,1,1,1,0,0,0,
+    0,1,0,0,0,1,1,1,
+    1,0,1,0,1,0,1,0,
+    0,0,0,1,0,1,0,1,
+    1,1,1,0,1,0,1,1,
+    0,1,0,1,0,0,0,1,
+  ];
+  pattern.forEach(v => {
+    const px = document.createElement('div');
+    px.className = 'qr-pixel' + (v ? '' : ' off');
+    grid.appendChild(px);
+  });
+}
+buildQR();
+</script>
+</body>
+</html>
